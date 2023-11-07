@@ -106,7 +106,6 @@ class App:
     # when the start button is pressed we start a configuration prosses to find if we have a textfile for links and the type video or playlist
     def GButton_951_command(self, folder_entr, link_entr=0 ,progress_bar=0, links = 0): # Start DOwnloading button
         print("__Download__")
-
         if links and link_to_download == "" :  # If we have a textfile start the downloading for each link
             for link in links:
                 identify_and_run(link)
@@ -140,6 +139,7 @@ class App:
                     # progress_bar.start()
                     Downloader_inst.download_song_and_create_dataframe(link_to_download, progress_bar)
                     # progress_bar.stop()
+                   
                 except Exception as e:  
                     showinfo(message='Invalid url try to copy the foul link')
                     return 
@@ -151,7 +151,7 @@ class App:
                     # progress_bar.start()
                     Downloader_inst.Download_playlist(link_to_download)
                     # progress_bar.stop()
-                    
+
                 except Exception as e:  
                     print(e)
                     showinfo(message='Invalid url try to copy the full link')
