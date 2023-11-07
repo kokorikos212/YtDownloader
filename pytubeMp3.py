@@ -67,6 +67,53 @@ class Downloader:
                 except Exception as e:  
                         print(e)
 
+    # def Save_video_data(self, video_data): # The apropriate data format: video_data = (title, author, views, length ,publish_date, link)
+    #             """Save the detail-data of the song-vid."""
+    #             connection = sqlite3.connect("YT_database.db")
+    #             cursor = connection.cursor()
+    #             # Append the name of the author into the Artists table 
+    #             author = video_data[1] 
+    #             cursor.execute('''
+    #                 INSERT INTO Artists (name) VALUES (?)''', (author,)) 
+    #             # Add the details of the video-song into the Songs table
+    #             cursor.execute('''
+    #                 INSERT INTO Songs (title, author,views, length ,publish_date, link) VALUES (?,?,?,?,?,?)''', video_data)
+    #             connection.commit()
+    #             connection.close()
+
+
+    import sqlite3
+
+    def Save_video_data(self, video_data):
+        """Save the detail-data of the song-vid."""
+        connection = sqlite3.connect("YT_database.db")
+        cursor = connection.cursor()
+        
+        # Extract the artist's name from video_data
+        author = video_data[1]
+
+        # Check if the artist already exists in the Artists table
+        cursor.execute("SELECT artist_id FROM Artists WHERE name = ?", (author,))
+        existing_artist = cursor.fetchone()
+
+        if existing_artist:
+            # Artist already exists, retrieve their ID
+            artist_id = existing_artist[0]
+        else:
+            # Artist doesn't exist, insert their name and get the newly generated ID
+            cursor.execute("INSERT INTO Artists (name) VALUES (?)", (author,))
+            connection.commit()
+            artist_id = cursor.lastrowid
+
+        # Adjust the video_data tuple to match the number of placeholders
+        adjusted_video_data = (video_data[0], artist_id, video_data[2], video_data[3], video_data[4], video_data[5])
+
+        # Add the details of the video-song into the Songs table
+        cursor.execute('''
+            INSERT INTO Songs (title, author, views, length, publish_date, link) VALUES (?,?,?,?,?,?)''', adjusted_video_data)
+        connection.commit()
+        connection.close()
+
 
     def download_song_and_create_dataframe(self, link, progres_bar=0): 
         try:
@@ -82,21 +129,13 @@ class Downloader:
             raiting = video.rating
             publish_date = video.publish_date
 
+            # Save the detail-data of the song-vid.
+            video_data = (title, author, views, length ,publish_date, link)
+            self.Save_video_data(video_data)
 
             # Download the video as an audio stream (webm format)
             audio_stream = video.streams.filter(only_audio=True).first()
             audio_file = audio_stream.download(output_path=self.output_directory)
-
-            # Save the detail-data of the song-vid
-            video_data = (title, author, views, length ,publish_date)
-            # Connect to the database
-            connection = sqlite3.connect("Downloads_Database.db")
-            cursor = connection.cursor()
-            # Add the details 
-            cursor.execute('''
-                INSERT INTO mytable (title, author, views, length ,publish_date) VALUES (?,?,?,?,?)''', video_data)
-            connection.commit()
-            connection.close()
 
             # Check the validity of the title as a filename
             valid_filname = self.sanitize_filename(title)
@@ -118,7 +157,8 @@ class Downloader:
 
         # Create a Playlist object
         playlist = Playlist(playlist_url)
-        valid_filename = self.sanitize_filename(playlist.title)
+        playlist_title = playlist.title
+        valid_filename = self.sanitize_filename(playlist_title)
         playlist_folder = os.path.join(self.output_directory,valid_filename)
         os.makedirs(playlist_folder, exist_ok=True)
 
@@ -128,7 +168,7 @@ class Downloader:
             try:
                 video = YouTube(video_url)
                 video_stream = video.streams.get_audio_only()
-                video_info = yt.player_response['videoDetails']                
+                # video_info = yt.player_response['videoDetails']                
 
                 # Get the video details
                 title = video.title
@@ -139,19 +179,13 @@ class Downloader:
                 raiting = video.rating
                 publish_date = video.publish_date
 
-                # Save the detail-data of the song-vid
-                video_data = (title, author, views, length ,publish_date)
-                # Connect to the databasef
-                connection = sqlite3.connect("Downloads_Database.db")
-                cursor = connection.cursor()
-                # Add the details 
-                cursor.execute('''
-                    INSERT INTO mytable(title, author, views, length ,publish_date) VALUES (?,?,?,?,?)''', video_data)
-                connection.commit()
-                connection.close()
+                video_data = (title, author, views, length ,publish_date, link)
+                # SAve the video-song details in the database
+                self.Save_video_data(video_data ) 
 
-            except:
-                pass
+            except Exception as e:
+                print(e)
+                return 
             
             # Download the video as an audio stream (webm format)
             audio_file = video_stream.download(output_path= playlist_folder)
