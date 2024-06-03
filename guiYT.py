@@ -8,6 +8,12 @@ import sys
 
 class App:
     def __init__(self, root):
+        """
+        Initializes the GUI application.
+
+        Parameters:
+        root: The root window of the application.
+        """
         #setting title
         root.title("Yt mass downloader")
         #setting window size
@@ -105,6 +111,18 @@ class App:
 
     # when the start button is pressed we start a configuration prosses to find if we have a textfile for links and the type video or playlist
     def GButton_951_command(self, folder_entr, link_entr=0 ,progress_bar=0, links = 0): # Start DOwnloading button
+        """
+        Callback function for the download button.
+
+        Parameters:
+        folder_entr: The entry widget for the output folder path.
+        link_entr: The entry widget for the YouTube link.
+        progress_bar: The progress bar widget.
+        links: A list of YouTube links from a text file.
+
+        Returns:
+        None
+        """
         print("__Download__")
         if links and link_to_download == "" :  # If we have a textfile start the downloading for each link
             for link in links:
@@ -171,6 +189,15 @@ class App:
             return
 
     def GButton_734_command(self, folder_entr):
+        """
+        Callback function for the browse button.
+
+        Parameters:
+        folder_entr: The entry widget for the output folder path.
+
+        Returns:
+        None
+        """
         print("__Browse__")
         directory = filedialog.askdirectory()
         folder_entr.delete(0,"end")
@@ -178,6 +205,15 @@ class App:
 
 
     def GButton_941_command(self, folder_entr):
+        """
+        Callback function for the button to select a text file with links.
+
+        Parameters:
+        folder_entr: The entry widget for the output folder path.
+
+        Returns:
+        None
+        """
         print("__Select textfile with links__")
         file_path = filedialog.askopenfilename(filetypes=[("Text files", "*.txt")])
         with open(file_path, "r" ) as f:
